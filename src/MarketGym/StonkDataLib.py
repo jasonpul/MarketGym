@@ -1,16 +1,10 @@
 import os
-import requests
 import pandas as pd
 from pandas.io.sql import SQLTable
 import datetime
-import time
-import pytz
-import random
 import sqlalchemy
 import csv
 from io import StringIO
-from sqlalchemy.sql.expression import column
-from tqdm import tqdm, utils
 from typing import Union, List
 from . import Types
 from . import Constants
@@ -134,8 +128,6 @@ def get_historical(symbols: Union[List[Types.Symbol], None] = None, start: Union
     query = 'SELECT %s FROM historical\n%s' % (
         ','.join('%s' % i for i in Constants.stonkDb_colums), query_filter)
 
-    print(query)
-
     start_timer = datetime.datetime.now()
     s_buf = StringIO()
     conn = cnx.raw_connection()
@@ -147,5 +139,17 @@ def get_historical(symbols: Union[List[Types.Symbol], None] = None, start: Union
     sf = pd.read_csv(s_buf, names=Constants.stonkDb_colums, parse_dates=[
                      'time']).set_index('time').sort_index()
     sf.index.names = ['timestamp']
-    print(len(sf.index), datetime.datetime.now() - start_timer)
+    # print(len(sf.index), datetime.datetime.now() - start_timer)
     return sf
+
+
+def get_historical_date_range():
+    start = cnx.execute('SELECT MIN(time) FROM historical').scalar()
+    end = cnx.execute('SELECT MAX(time) FROM historical').scalar()
+    return start, end
+
+
+def get_historical_date_list():
+    date_list = sorted([i[0] for i in cnx.execute(
+        'SELECT DISTINCT time FROM historical')])
+    return date_list

@@ -12,7 +12,7 @@ from . import Types
 load_dotenv()
 
 
-tradier_url = 'https://api.tradier.com/v1'
+tradier_url = 'https://api.tradier.com'
 
 
 def _get_historical(symbol: Types.Symbol, start: Union[None, Types.Datetime] = None, end: Union[None, Types.Datetime] = None, rate_limit: bool = False):
@@ -31,7 +31,7 @@ def _get_historical(symbol: Types.Symbol, start: Union[None, Types.Datetime] = N
     if rate_limit:
         time.sleep(random.randrange(1, 20) / 10.0)
 
-    url = '%s/markets/history' % tradier_url
+    url = '%s/v1/markets/history' % tradier_url
     params = {
         'symbol': symbol.upper(),
         'interval': 'daily',
