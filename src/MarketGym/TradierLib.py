@@ -15,6 +15,10 @@ load_dotenv()
 tradier_url = 'https://api.tradier.com'
 
 
+def load_env_file(path: str):
+    load_dotenv(path)
+
+
 def _get_historical(symbol: Types.Symbol, start: Union[None, Types.Datetime] = None, end: Union[None, Types.Datetime] = None, rate_limit: bool = False):
     def process_frame(sf: Types.StockFrame, symbol: Types.Symbol):
         sf = sf.dropna()

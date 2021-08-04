@@ -16,6 +16,12 @@ cnx = sqlalchemy.create_engine('postgresql://%s:%s@%s/%s' % (os.environ.get('POS
                                os.environ.get('POSTGRES-PASS'), os.environ.get('POSTGRES-URL'), os.environ.get('POSTGRES-DB')))
 
 
+def load_env_file(path: str):
+    load_dotenv(path)
+    globals()['cnx'] = sqlalchemy.create_engine('postgresql://%s:%s@%s/%s' % (os.environ.get('POSTGRES-USER'),
+                                                                              os.environ.get('POSTGRES-PASS'), os.environ.get('POSTGRES-URL'), os.environ.get('POSTGRES-DB')))
+
+
 def create_historical_table() -> None:
     cmd = '''
         CREATE TABLE symbols (
@@ -52,7 +58,7 @@ def write_symbols(symbols: List[Types.Symbol]) -> None:
 def get_symbols() -> List[Types.Symbol]:
     query = 'SELECT * FROM symbols;'
     symbols = pd.read_sql(query, con=cnx).symbol.to_list()
-    return symbols
+    return sorted(symbols)
 
 
 def write_historical(sf: Types.StockFrame) -> None:

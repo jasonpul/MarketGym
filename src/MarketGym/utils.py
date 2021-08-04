@@ -1,51 +1,53 @@
 import datetime
 import pandas as pd
 
+epsilon = 1e-16
+
 
 def rsi(series: pd.Series, n: int = 14) -> pd.Series:
     delta = series.diff()
     up = delta.clip(lower=0)
     down = -delta.clip(upper=0)
     ema_up = pd.Series.ewm(up, span=n).mean()
-    ema_down = pd.Series.ewm(down, span=n).mean()
+    ema_down = pd.Series.ewm(down, span=n).mean() + epsilon
     rsi = ema_up / ema_down
     rsi = 100 - (100 / (1 + rsi))
 
-    return rsi
+    return rsi + epsilon
 
 
 def macd(series: pd.Series) -> pd.Series:
     exp1 = series.ewm(span=12, adjust=False).mean()
     exp2 = series.ewm(span=26, adjust=False).mean()
     macd = exp1 - exp2
-    return macd
+    return macd + epsilon
 
 
 def cci(close: pd.Series, high: pd.Series, low: pd.Series, n: int = 20) -> pd.Series:
     typical_price = (high + low + close) / 3.0
     moving_average = typical_price.rolling(n).mean()
     mean_deviation = typical_price.rolling(n).std()
-    cci = (typical_price - moving_average) / (0.15 * mean_deviation)
-    return cci
+    cci = (typical_price - moving_average) / (0.15 * mean_deviation + epsilon)
+    return cci + epsilon
 
 
-def get_adx(close: pd.Series, high: pd.Series, low: pd.Series, n: int = 14) -> pd.Series:
-    plus_dm = high.diff().clip(lower=0)
-    minus_dm = low.diff().clip(upper=0)
+# def get_adx(close: pd.Series, high: pd.Series, low: pd.Series, n: int = 14) -> pd.Series:
+#     plus_dm = high.diff().clip(lower=0)
+#     minus_dm = low.diff().clip(upper=0)
 
-    tr1 = pd.DataFrame(high - low)
-    tr2 = pd.DataFrame(abs(high - close.shift(1)))
-    tr3 = pd.DataFrame(abs(low - close.shift(1)))
-    frames = [tr1, tr2, tr3]
-    tr = pd.concat(frames, axis=1, join='inner').max(axis=1)
-    atr = tr.rolling(n).mean()
+#     tr1 = pd.DataFrame(high - low)
+#     tr2 = pd.DataFrame(abs(high - close.shift(1)))
+#     tr3 = pd.DataFrame(abs(low - close.shift(1)))
+#     frames = [tr1, tr2, tr3]
+#     tr = pd.concat(frames, axis=1, join='inner').max(axis=1)
+#     atr = tr.rolling(n).mean()
 
-    plus_di = 100 * (plus_dm.ewm(alpha=1 / n).mean() / atr)
-    minus_di = abs(100 * (minus_dm.ewm(alpha=1 / n).mean() / atr))
-    dx = (abs(plus_di - minus_di) / abs(plus_di + minus_di)) * 100
-    adx = ((dx.shift(1) * (n - 1)) + dx) / n
-    adx_smooth = adx.ewm(alpha=1 / n).mean()
-    return plus_di, minus_di, adx_smooth
+#     plus_di = 100 * (plus_dm.ewm(alpha=1 / n).mean() / atr)
+#     minus_di = abs(100 * (minus_dm.ewm(alpha=1 / n).mean() / atr))
+#     dx = (abs(plus_di - minus_di) / abs(plus_di + minus_di)) * 100
+#     adx = ((dx.shift(1) * (n - 1)) + dx) / n
+#     adx_smooth = adx.ewm(alpha=1 / n).mean()
+#     return plus_di, minus_di, adx_smooth
 
 
 def get_sp500_filtered_symbols(date: datetime.datetime = datetime.datetime(year=2008, month=1, day=1), n: int = 50):
