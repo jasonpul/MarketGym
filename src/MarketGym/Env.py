@@ -135,7 +135,6 @@ class Env:
             data.max(axis=1)[:, :, np.newaxis], data.shape[1], axis=2).swapaxes(2, 1)
         scaled = (data - data_min) / (data_max - data_min + 1e-16)
 
-        print(sf)
         return scaled
 
     def step(self, action: np.ndarray):

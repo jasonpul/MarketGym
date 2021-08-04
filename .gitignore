@@ -3,3 +3,6 @@ __pycache__/
 .env
 watchlist.csv
 test.py
+src/*.egg-info/
+src/build
+src/dist
