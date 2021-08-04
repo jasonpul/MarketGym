@@ -15,7 +15,7 @@ def set_seed(seed: int):
 
 
 class Env:
-    def __init__(self, start_balance: float) -> None:
+    def __init__(self, start_balance: float, min_date: Union[datetime.datetime, None] = None, max_date: Union[datetime.datetime, None] = None) -> None:
         self.lookback_period = 90
         self.episode_period = 90
         # self.lookback_period = 25
@@ -25,7 +25,7 @@ class Env:
         self.transaction_threshold = 1e-4
         self.done_treashold = 100
         self.start_balance = start_balance
-        self.start_date = datetime.datetime.now()
+        self.min_date, self.max_date = min_date, max_date
 
         self.reset()
 
@@ -34,9 +34,19 @@ class Env:
         self.last_balance = self.balance * 1
         self.set_start_date()
         self.set_stock_frame()
+        state = self.get_state()
+        return state
 
     def set_start_date(self) -> None:
         date_list = SDL.get_historical_date_list()
+        if self.min_date is not None:
+            date_list = [i for i in date_list if i.date() >=
+                         self.min_date.date()]
+
+        if self.max_date is not None:
+            date_list = [i for i in date_list if i.date() <=
+                         self.max_date.date()]
+
         idx = random.choice(list(range(len(date_list)))[
                             self.lookback_period:-self.episode_period])
 
@@ -91,14 +101,6 @@ class Env:
         self.sf['day'] = self.sf.index.floor('d')
         self.symbols = self.sf['symbol'].unique()
 
-        # # add cash
-        # cash = self.sf[self.sf['symbol'] == self.symbols[0]].copy()
-        # cash['symbol'] = '$'
-        # cash.iloc[:, 1:-1] = 1.0
-        # self.sf = pd.concat([self.sf, cash])
-        # self.sf = self.sf.sort_values(['day', 'symbol'])
-        # self.symbols = np.append(self.symbols, '$')
-
         self.initialize_shares()
         self.sf = self.process_stock_frame(self.sf)
         assert len(self.sf) == len(self.symbols) * len(self.date_list)
@@ -133,6 +135,7 @@ class Env:
             data.max(axis=1)[:, :, np.newaxis], data.shape[1], axis=2).swapaxes(2, 1)
         scaled = (data - data_min) / (data_max - data_min + 1e-16)
 
+        print(sf)
         return scaled
 
     def step(self, action: np.ndarray):
